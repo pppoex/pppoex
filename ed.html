@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA加密解密工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.1/jsencrypt.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --border-radius: 16px;
+            --text-color: #212529;
+            --bg-gradient: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            --header-text: white;
+            --footer-text: white;
+            --textarea-bg: rgba(255, 255, 255, 0.8);
+            --textarea-text: #212529;
+            --key-display-bg: rgba(255, 255, 255, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-color);
+            transition: all 0.5s ease;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 深色主题 */
+        body.dark-theme {
+            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --card-bg: rgba(40, 40, 40, 0.9);
+            --text-color: #f8f9fa;
+            --header-text: #f8f9fa;
+            --footer-text: #f8f9fa;
+            --light: #212529;
+            --dark: #f8f9fa;
+            --textarea-bg: rgba(60, 60, 60, 0.8);
+            --textarea-text: #f8f9fa;
+            --key-display-bg: rgba(60, 60, 60, 0.6);
+        }
+
+        /* 浅色主题 */
+        body.light-theme {
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #212529;
+            --header-text: #212529;
+            --footer-text: #212529;
+            --textarea-bg: rgba(255, 255, 255, 0.9);
+            --textarea-text: #212529;
+            --key-display-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        /* 蓝色主题 */
+        body.blue-theme {
+            --bg-gradient: linear-gradient(135deg, #1a2a6c, #4361ee, #3a7bd5);
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --header-text: white;
+            --footer-text: white;
+            --textarea-bg: rgba(255, 255, 255, 0.8);
+            --textarea-text: #212529;
+            --key-display-bg: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 紫色主题 */
+        body.purple-theme {
+            --bg-gradient: linear-gradient(135deg, #4776E6, #8E54E9, #4776E6);
+            --primary: #8E54E9;
+            --secondary: #7d48d1;
+            --accent: #9b6dec;
+            --header-text: white;
+            --footer-text: white;
+        }
+
+        /* 橙色主题 */
+        body.orange-theme {
+            --bg-gradient: linear-gradient(135deg, #f46b45, #eea849, #f46b45);
+            --primary: #eea849;
+            --secondary: #e0993a;
+            --accent: #f46b45;
+            --header-text: white;
+            --footer-text: white;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: var(--header-text);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        .app-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            padding: 30px;
+            margin-bottom: 30px;
+            color: var(--text-color);
+        }
+
+        .card-header {
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-header i {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .char-count {
+            font-size: 0.9rem;
+            font-weight: normal;
+            opacity: 0.7;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background-color: var(--textarea-bg);
+            color: var(--textarea-text);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(67, 97, 238, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(67, 97, 238, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #3ab0d3;
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(76, 201, 240, 0.4);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e11d74;
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(247, 37, 133, 0.4);
+        }
+
+        .result-container {
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-color);
+        }
+
+        .copy-btn:hover {
+            background: var(--textarea-bg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .key-info {
+            background: rgba(67, 97, 238, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .key-info h3 {
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .key-display {
+            word-break: break-all;
+            background: var(--key-display-bg);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            max-height: 150px;
+            overflow-y: auto;
+            color: var(--textarea-text);
+        }
+
+        .footer {
+            text-align: center;
+            color: var(--footer-text);
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #5a6268;
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .theme-switcher {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            z-index: 100;
+            max-width: 200px;
+            justify-content: flex-end;
+        }
+
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .theme-btn.dark {
+            background: linear-gradient(135deg, #0f0c29, #302b63);
+        }
+
+        .theme-btn.light {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            color: #212529;
+            border-color: #dee2e6;
+        }
+
+        .theme-btn.blue {
+            background: linear-gradient(135deg, #1a2a6c, #4361ee);
+        }
+
+        .theme-btn.purple {
+            background: linear-gradient(135deg, #4776E6, #8E54E9);
+        }
+
+        .theme-btn.orange {
+            background: linear-gradient(135deg, #f46b45, #eea849);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #6c757d;
+        }
+
+        .status-dot.active {
+            background-color: var(--success);
+        }
+
+        .key-input-area {
+            margin-top: 15px;
+        }
+
+        .key-input-area textarea {
+            min-height: 100px;
+            font-size: 0.85rem;
+        }
+
+        .key-input-btn {
+            margin-top: 10px;
+            background: #6c757d;
+            color: white;
+        }
+
+        .key-input-btn:hover {
+            background: #5a6268;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .theme-switcher {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .theme-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background: var(--success);
+            color: white;
+            box-shadow: var(--shadow);
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            max-width: 90%;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body class="blue-theme">
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-lock"></i> RSA加密解密工具</h1>
+            <p>支持手动输入密钥的长文本加密解密解决方案</p>
+        </header>
+
+        <div class="grid">
+            <div class="app-card">
+                <div class="card-header">
+                    <i class="fas fa-key"></i>
+                    <h2>密钥管理</h2>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="generateKeys">
+                        <i class="fas fa-key"></i> 生成密钥对
+                    </button>
+                    <button class="btn btn-outline" id="resetKeys">
+                        <i class="fas fa-trash"></i> 重置密钥
+                    </button>
+                </div>
+                
+                <div class="key-info">
+                    <h3><i class="fas fa-lock-open"></i> 公钥</h3>
+                    <div class="key-display" id="publicKeyDisplay">
+                        密钥尚未生成...
+                    </div>
+                    <div class="key-input-area">
+                        <textarea id="publicKeyInput" placeholder="在此粘贴您的公钥..."></textarea>
+                        <button class="btn key-input-btn" id="importPublicKey">
+                            <i class="fas fa-upload"></i> 导入公钥
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="key-info">
+                    <h3><i class="fas fa-lock"></i> 私钥</h3>
+                    <div class="key-display" id="privateKeyDisplay">
+                        密钥尚未生成...
+                    </div>
+                    <div class="key-input-area">
+                        <textarea id="privateKeyInput" placeholder="在此粘贴您的私钥..."></textarea>
+                        <button class="btn key-input-btn" id="importPrivateKey">
+                            <i class="fas fa-upload"></i> 导入私钥
+                        </button>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.8rem; color: var(--warning);">
+                        <i class="fas fa-exclamation-circle"></i> 警告：私钥必须保密，任何人获取您的私钥都可以解密您的信息！
+                    </p>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <div class="card-header">
+                    <i class="fas fa-shield-alt"></i>
+                    <h2>加密与解密</h2>
+                </div>
+                
+                <div class="input-group">
+                    <label for="encryptInput">
+                        <i class="fas fa-pen"></i> 输入要加密的文本：
+                        <span class="char-count" id="encryptCharCount">0 字符</span>
+                    </label>
+                    <textarea id="encryptInput" placeholder="在此输入要加密的文本..." oninput="updateCharCount('encrypt')"></textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label for="decryptInput">
+                        <i class="fas fa-pen"></i> 输入要解密的文本：
+                        <span class="char-count" id="decryptCharCount">0 字符</span>
+                    </label>
+                    <textarea id="decryptInput" placeholder="在此输入要解密的文本..." oninput="updateCharCount('decrypt')"></textarea>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-success" id="encryptBtn">
+                        <i class="fas fa-lock"></i> 加密文本
+                    </button>
+                    <button class="btn btn-success btn-clear" id="encryptClearBtn">
+                        <i class="fas fa-lock"></i> 加密并清除
+                    </button>
+                    <button class="btn btn-warning" id="decryptBtn">
+                        <i class="fas fa-unlock"></i> 解密文本
+                    </button>
+                    <button class="btn btn-warning btn-clear" id="decryptClearBtn">
+                        <i class="fas fa-unlock"></i> 解密并清除
+                    </button>
+                </div>
+                
+                <div class="input-group">
+                    <label for="outputText"><i class="fas fa-file-code"></i> 输出结果：</label>
+                    <div class="result-container">
+                        <textarea id="outputText" placeholder="加密或解密的结果将显示在这里..." readonly></textarea>
+                        <button class="copy-btn" id="copyOutput">
+                            <i class="fas fa-copy"></i> 复制
+                        </button>
+                    </div>
+                    <div class="status-indicator">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="statusText">就绪</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-card">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i>
+                <h2>使用说明</h2>
+            </div>
+            <div class="about-content">
+                <h3>密钥管理：</h3>
+                <ul>
+                    <li>点击"生成密钥对"创建新的RSA密钥</li>
+                    <li>在文本框中粘贴公钥/私钥并点击导入按钮</li>
+                    <li>公钥用于加密，私钥用于解密</li>
+                    <li>重置密钥会清除当前所有密钥</li>
+                </ul>
+                
+                <h3>加密解密操作：</h3>
+                <ul>
+                    <li>在"输入要加密的文本"框中输入原始文本</li>
+                    <li>点击"加密文本"生成加密内容</li>
+                    <li>在"输入要解密的文本"框中粘贴加密文本</li>
+                    <li>点击"解密文本"还原原始内容</li>
+                    <li>带"清除"的按钮会在操作后清空输入框</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2023 RSA加密解密工具 | 支持长文本和手动密钥输入</p>
+        </div>
+    </div>
+
+    <div class="theme-switcher">
+        <div class="theme-btn dark" title="深色主题" onclick="changeTheme('dark')">
+            <i class="fas fa-moon"></i>
+        </div>
+        <div class="theme-btn light" title="浅色主题" onclick="changeTheme('light')">
+            <i class="fas fa-sun"></i>
+        </div>
+        <div class="theme-btn blue" title="蓝色主题" onclick="changeTheme('blue')">
+            <i class="fas fa-palette"></i>
+        </div>
+        <div class="theme-btn purple" title="紫色主题" onclick="changeTheme('purple')">
+            <i class="fas fa-magic"></i>
+        </div>
+        <div class="theme-btn orange" title="橙色主题" onclick="changeTheme('orange')">
+            <i class="fas fa-fire"></i>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        操作成功！
+    </div>
+
+    <script>
+        // 全局变量存储密钥
+        let crypt = null;
+        let publicKey = '';
+        let privateKey = '';
+        let isProcessing = false;
+
+        // DOM元素
+        const generateKeysBtn = document.getElementById('generateKeys');
+        const resetKeysBtn = document.getElementById('resetKeys');
+        const encryptBtn = document.getElementById('encryptBtn');
+        const encryptClearBtn = document.getElementById('encryptClearBtn');
+        const decryptBtn = document.getElementById('decryptBtn');
+        const decryptClearBtn = document.getElementById('decryptClearBtn');
+        const copyOutputBtn = document.getElementById('copyOutput');
+        const publicKeyDisplay = document.getElementById('publicKeyDisplay');
+        const privateKeyDisplay = document.getElementById('privateKeyDisplay');
+        const publicKeyInput = document.getElementById('publicKeyInput');
+        const privateKeyInput = document.getElementById('privateKeyInput');
+        const importPublicKey = document.getElementById('importPublicKey');
+        const importPrivateKey = document.getElementById('importPrivateKey');
+        const encryptInput = document.getElementById('encryptInput');
+        const decryptInput = document.getElementById('decryptInput');
+        const outputText = document.getElementById('outputText');
+        const notification = document.getElementById('notification');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const encryptCharCount = document.getElementById('encryptCharCount');
+        const decryptCharCount = document.getElementById('decryptCharCount');
+
+        // 生成密钥对
+        generateKeysBtn.addEventListener('click', () => {
+            crypt = new JSEncrypt({default_key_size: 2048});
+            
+            // 获取密钥
+            privateKey = crypt.getPrivateKey();
+            publicKey = crypt.getPublicKey();
+            
+            // 更新显示
+            publicKeyDisplay.textContent = publicKey || '公钥生成失败';
+            privateKeyDisplay.textContent = privateKey || '私钥生成失败';
+            
+            // 清空输入框
+            publicKeyInput.value = '';
+            privateKeyInput.value = '';
+            
+            showNotification('密钥对生成成功！');
+            setStatus('密钥已生成', 'success');
+        });
+
+        // 重置密钥
+        resetKeysBtn.addEventListener('click', () => {
+            crypt = null;
+            publicKey = '';
+            privateKey = '';
+            
+            publicKeyDisplay.textContent = '密钥尚未生成...';
+            privateKeyDisplay.textContent = '密钥尚未生成...';
+            publicKeyInput.value = '';
+            privateKeyInput.value = '';
+            
+            showNotification('密钥已重置！');
+            setStatus('密钥已重置', 'success');
+        });
+
+        // 导入公钥
+        importPublicKey.addEventListener('click', () => {
+            const key = publicKeyInput.value.trim();
+            if (!key) {
+                showNotification('请输入公钥！', 'error');
+                return;
+            }
+            
+            try {
+                // 验证公钥
+                const testCrypt = new JSEncrypt();
+                testCrypt.setPublicKey(key);
+                
+                // 如果公钥有效则保存
+                publicKey = key;
+                publicKeyDisplay.textContent = key;
+                showNotification('公钥导入成功！');
+                setStatus('公钥已导入', 'success');
+            } catch (error) {
+                showNotification('无效的公钥格式！', 'error');
+                setStatus('导入失败', 'error');
+            }
+        });
+
+        // 导入私钥
+        importPrivateKey.addEventListener('click', () => {
+            const key = privateKeyInput.value.trim();
+            if (!key) {
+                showNotification('请输入私钥！', 'error');
+                return;
+            }
+            
+            try {
+                // 验证私钥
+                const testCrypt = new JSEncrypt();
+                testCrypt.setPrivateKey(key);
+                
+                // 如果私钥有效则保存
+                privateKey = key;
+                privateKeyDisplay.textContent = key;
+                showNotification('私钥导入成功！');
+                setStatus('私钥已导入', 'success');
+            } catch (error) {
+                showNotification('无效的私钥格式！', 'error');
+                setStatus('导入失败', 'error');
+            }
+        });
+
+        // 加密文本
+        function encryptText(clearInput = false) {
+            if (isProcessing) return;
+            if (!publicKey) {
+                showNotification('请先生成或导入公钥！', 'error');
+                return;
+            }
+            
+            const text = encryptInput.value.trim();
+            if (!text) {
+                showNotification('请输入要加密的文本！', 'error');
+                return;
+            }
+            
+            isProcessing = true;
+            setStatus('正在加密...', 'processing');
+            
+            // 使用setTimeout避免阻塞UI
+            setTimeout(() => {
+                try {
+                    crypt = new JSEncrypt();
+                    crypt.setPublicKey(publicKey);
+                    
+                    // 分块加密处理
+                    const chunkSize = 190; // RSA 2048位密钥最大加密长度
+                    const chunks = [];
+                    
+                    for (let i = 0; i < text.length; i += chunkSize) {
+                        chunks.push(text.substring(i, i + chunkSize));
+                    }
+                    
+                    const encryptedChunks = [];
+                    
+                    // 加密每个块
+                    for (let i = 0; i < chunks.length; i++) {
+                        const encrypted = crypt.encrypt(chunks[i]);
+                        if (encrypted) {
+                            encryptedChunks.push(encrypted);
+                        } else {
+                            throw new Error('加密失败');
+                        }
+                    }
+                    
+                    // 用特殊分隔符连接加密块
+                    const encryptedText = encryptedChunks.join('|ENC|');
+                    outputText.value = encryptedText;
+                    
+                    if (clearInput) encryptInput.value = '';
+                    
+                    setStatus('加密完成', 'success');
+                    showNotification(`文本加密成功！处理了 ${chunks.length} 个文本块`);
+                } catch (error) {
+                    console.error('加密错误:', error);
+                    showNotification('加密失败: ' + error.message, 'error');
+                    setStatus('加密失败', 'error');
+                } finally {
+                    isProcessing = false;
+                }
+            }, 100);
+        }
+
+        // 解密文本
+        function decryptText(clearInput = false) {
+            if (isProcessing) return;
+            if (!privateKey) {
+                showNotification('请先生成或导入私钥！', 'error');
+                return;
+            }
+            
+            const text = decryptInput.value.trim();
+            if (!text) {
+                showNotification('请输入要解密的文本！', 'error');
+                return;
+            }
+            
+            isProcessing = true;
+            setStatus('正在解密...', 'processing');
+            
+            // 使用setTimeout避免阻塞UI
+            setTimeout(() => {
+                try {
+                    crypt = new JSEncrypt();
+                    crypt.setPrivateKey(privateKey);
+                    
+                    // 分割加密块
+                    const encryptedChunks = text.split('|ENC|');
+                    const decryptedChunks = [];
+                    
+                    // 解密每个块
+                    for (let i = 0; i < encryptedChunks.length; i++) {
+                        const decrypted = crypt.decrypt(encryptedChunks[i]);
+                        if (decrypted) {
+                            decryptedChunks.push(decrypted);
+                        } else {
+                            throw new Error('解密失败');
+                        }
+                    }
+                    
+                    // 合并解密结果
+                    const decryptedText = decryptedChunks.join('');
+                    outputText.value = decryptedText;
+                    
+                    if (clearInput) decryptInput.value = '';
+                    
+                    setStatus('解密完成', 'success');
+                    showNotification(`文本解密成功！处理了 ${encryptedChunks.length} 个加密块`);
+                } catch (error) {
+                    console.error('解密错误:', error);
+                    showNotification('解密失败: ' + error.message, 'error');
+                    setStatus('解密失败', 'error');
+                } finally {
+                    isProcessing = false;
+                }
+            }, 100);
+        }
+
+        // 按钮事件绑定
+        encryptBtn.addEventListener('click', () => encryptText(false));
+        encryptClearBtn.addEventListener('click', () => encryptText(true));
+        decryptBtn.addEventListener('click', () => decryptText(false));
+        decryptClearBtn.addEventListener('click', () => decryptText(true));
+
+        // 复制输出结果
+        copyOutputBtn.addEventListener('click', () => {
+            if (!outputText.value) {
+                showNotification('没有内容可复制！', 'error');
+                return;
+            }
+            
+            outputText.select();
+            document.execCommand('copy');
+            
+            showNotification('内容已复制到剪贴板！');
+            setStatus('已复制到剪贴板', 'success');
+        });
+
+        // 更新字符计数
+        function updateCharCount(type) {
+            const input = type === 'encrypt' ? encryptInput : decryptInput;
+            const countElement = type === 'encrypt' ? encryptCharCount : decryptCharCount;
+            const charCount = input.value.length;
+            
+            countElement.textContent = `${charCount} 字符`;
+        }
+
+        // 设置状态指示器
+        function setStatus(message, status) {
+            statusText.textContent = message;
+            
+            statusDot.classList.remove('active');
+            if (status === 'processing') {
+                statusDot.style.backgroundColor = '#4361ee';
+            } else if (status === 'success') {
+                statusDot.style.backgroundColor = '#4cc9f0';
+                statusDot.classList.add('active');
+            } else if (status === 'error') {
+                statusDot.style.backgroundColor = '#f72585';
+            } else {
+                statusDot.style.backgroundColor = '#6c757d';
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = 'notification show';
+            
+            if (type === 'error') {
+                notification.style.background = 'var(--warning)';
+            } else {
+                notification.style.background = 'var(--success)';
+            }
+            
+            setTimeout(() => {
+                notification.className = 'notification';
+            }, 3000);
+        }
+
+        // 切换主题
+        function changeTheme(theme) {
+            document.body.className = theme + '-theme';
+        }
+
+        // 初始化
+        window.onload = function() {
+            setStatus('就绪', 'ready');
+        }
+    </script>
+</body>
+</html>
